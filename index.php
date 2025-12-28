@@ -102,7 +102,7 @@
                     </p>
                 </div>
 
-                <form class="flex flex-col gap-6" method="post" action="/controllers/auth.php">
+                <form class="flex flex-col gap-6" method="post" action="/Controllers/auth.php">
 
                     <div class="flex flex-col gap-2">
                         <label class="text-slate-700 dark:text-white text-sm font-medium" for="email">Email
@@ -189,7 +189,7 @@
                     <p class="text-slate-500 dark:text-gray-400 text-sm">
                         Don't have an account yet?
                         <a class="font-bold text-slate-800 dark:text-white hover:text-primary dark:hover:text-primary transition-colors inline-flex items-center gap-1 group"
-                            href="/src/register.php">
+                            href="/Views/register.php">
                             Join the Pride
                             <span
                                 class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">chevron_right</span>
