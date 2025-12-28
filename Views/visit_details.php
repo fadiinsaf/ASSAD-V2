@@ -1,29 +1,24 @@
 <?php
-session_start();
-if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "visiter") {
-    header("Location: ../index.html");
-    exit();
-}
 require_once __DIR__ . "/../database/database.php";
+require_once __DIR__ . "/../Models/GuideVisit.php";
+require_once __DIR__ . "/../Models/VisitStep.php";
+require_once __DIR__ . "/../Models/Comment.php";
+require_once __DIR__ . "/../Models/Visitor.php";
+require_once __DIR__ . "/../Middlewares/IsAuthed.php";
+require_once __DIR__ . "/../Middlewares/IsVisitor.php";
+session_start();
+
+IsAuthed::handle();
+IsVisitor::handle();
+
 if (isset($_GET["id"])) {
     $id = (int) $_GET["id"];
 
-    $stmt = $db->prepare("SELECT * FROM guide_visits WHERE id = ?");
-    $stmt->execute([$id]);
+    $visit = GuideVisit::getVisit($id);
 
-    $visit = $stmt->fetch();
+    $steps = VisitStep::getStepsOfVisit($id) ;
 
-    $stmt = $db->prepare("SELECT * FROM visit_steps WHERE id_visit = ? ORDER BY step_order");
-    $stmt->execute([$id]);
-
-    $steps = $stmt->fetchAll();
-
-    $stmt = $db->prepare("SELECT * FROM comments c INNER JOIN users u ON c.id_visiter = u.id WHERE c.id_visit = ?");
-    $stmt->execute([$id]);
-
-    $comments_user = $stmt->fetchAll();
-
-
+    $comments_user = Comment::getUsersComments($id);
 } else {
     echo "error";
     header("Location: visit_list.php");
@@ -119,7 +114,7 @@ if (isset($_GET["id"])) {
                             href="visit_list.php">Tours</a>
                     </nav>
                     <div class="hidden md:flex items-center shrink-0 z-10">
-                        <a href="../controllers/logout.php"
+                        <a href="../Controllers/logout.php"
                             class="flex items-center justify-center rounded-full h-11 px-6 bg-primary hover:bg-[#0fd660] transition-all text-background-dark text-sm font-bold font-display shadow-[0_0_15px_rgba(19,236,109,0.2)] hover:shadow-[0_0_20px_rgba(19,236,109,0.4)]">
                             Log out
                         </a>
@@ -218,7 +213,7 @@ if (isset($_GET["id"])) {
                             <div class="bg-surface/30 rounded-2xl p-6 border border-border-color">
                                 <h3 class="text-xl font-bold mb-4">Add Your Review</h3>
 
-                                <form action="../controllers/add_comment.php" method="post">
+                                <form action="../Controllers/add_comment.php" method="post">
                                     <input type="hidden" name="visit_id" value="<?= $visit['id'] ?>">
 
                                     <div class="mb-4">
@@ -299,7 +294,7 @@ if (isset($_GET["id"])) {
                                     </div>
                                 </div>
 
-                                <form action="../controllers/add_reservation.php" method="post">
+                                <form action="../Controllers/add_reservation.php" method="post">
 
                                     <div class="p-6 flex flex-col gap-6">
                                         <div class="space-y-2">
@@ -332,6 +327,7 @@ if (isset($_GET["id"])) {
                                                 class="block w-full pl-10 pr-10 py-3 text-sm border border-border-color focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary rounded-xl text-text-main bg-surface-highlight appearance-none cursor-pointer hover:bg-surface-highlight/80 transition-colors">
 
                                         </div>
+                                        <input type="hidden" name="visit_id" value="<?= $visit["id"]?>">
                                         <button type="submit"
                                             class="w-full bg-primary text-surface font-extrabold text-lg py-4 rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-hover hover:shadow-primary/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
                                             <span

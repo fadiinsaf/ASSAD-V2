@@ -1,13 +1,15 @@
 <?php 
-    session_start();
-    if(!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "visiter"){
-        echo "Current role is: " . ($_SESSION["role"] ?? "NOT SET");
-        header("Location: ../index.html");
-        exit();
-    }
-    require_once __DIR__ . "/../database/database.php";
-    $stmt = $db->query("SELECT * FROM animals", PDO::FETCH_ASSOC);
-    $animals = $stmt->fetchAll();
+require_once __DIR__ . "/../database/database.php";
+require_once __DIR__ . "/../Models/Animal.php";
+require_once __DIR__ . "/../Models/Visitor.php";
+require_once __DIR__ . "/../Middlewares/IsAuthed.php";
+require_once __DIR__ . "/../Middlewares/IsVisitor.php";
+session_start();
+
+IsAuthed::handle();
+IsVisitor::handle();
+
+$animals = Animal::getAllWithHabitats();
 ?>
 
 <!DOCTYPE html>
@@ -106,7 +108,7 @@
                             href="visit_list.php">Tours</a>
                     </nav>
                     <div class="hidden md:flex items-center shrink-0 z-10">
-                    <a href="../controllers/logout.php"
+                    <a href="../Controllers/logout.php"
                         class="flex items-center justify-center rounded-full h-11 px-6 bg-primary hover:bg-[#0fd660] transition-all text-background-dark text-sm font-bold font-display shadow-[0_0_15px_rgba(19,236,109,0.2)] hover:shadow-[0_0_20px_rgba(19,236,109,0.4)]">
                        Log out
                     </a>

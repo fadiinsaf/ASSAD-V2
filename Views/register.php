@@ -102,7 +102,7 @@ session_start();
                     <p class="text-slate-500 dark:text-gray-400">Choose your path below to begin your expedition.</p>
                 </div>
 
-                <form action="../controllers/add_user.php" method="post" class="space-y-6">
+                <form action="../Controllers/add_user.php" method="post" class="space-y-6">
 
                     <div class="grid grid-cols-2 gap-4">
 

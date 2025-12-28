@@ -1,15 +1,16 @@
 <?php 
-    session_start();
-    if(!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "guide"){
-        header("Location: ../index.html");
-        exit();
-    }
-    require_once __DIR__ . "/../database/database.php";
-    $stmt = $db->query("SELECT * FROM reservation r INNER JOIN users u ON u.id = r.id_visiter INNER JOIN guide_visits g ON r.id_visit = g.id WHERE g.id_guide = 2" , PDO::FETCH_ASSOC);
-    $visits = $stmt->fetchAll();
+require_once __DIR__ . "/../database/database.php";
+require_once __DIR__ . "/../Models/GuideVisit.php";
+require_once __DIR__ . "/../Models/Guide.php";
+require_once __DIR__ . "/../Middlewares/IsAuthed.php";
+require_once __DIR__ . "/../Middlewares/IsGuide.php";
+session_start();
 
+IsAuthed::handle();
+IsGuide::handle();
+
+$visits = GuideVisit::getGuideVisits($_SESSION["user"]->getUserId());
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -58,10 +59,10 @@
   <div class="w-full bg-card border-b border-border">
     <div class="container mx-auto px-4 lg:px-10 xl:px-32 py-4 flex justify-between items-center">
       <h2 class="text-lg font-bold">ASSAD – Guide Dashboard</h2>
-      <button class="flex items-center gap-2 text-sm font-bold text-red-600 hover:text-red-800">
+      <a href="../Controllers/logout.php" class="flex items-center gap-2 text-sm font-bold text-red-600 hover:text-red-800">
         <span class="material-symbols-outlined text-base">logout</span>
         Logout
-      </button>
+      </a>
     </div>
   </div>
 
@@ -102,7 +103,7 @@
     </section>
 
     <!-- TOUR FORM -->
-    <form action="../controllers/add_tour.php" method="POST" class="bg-card border border-border rounded-xl p-6 shadow-sm">
+    <form action="../Controllers/add_tour.php" method="POST" class="bg-card border border-border rounded-xl p-6 shadow-sm">
       <h2 class="text-xl font-bold mb-4">Create Tours</h2>
       <!-- BASIC INFO -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

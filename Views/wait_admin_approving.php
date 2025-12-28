@@ -1,9 +1,12 @@
 <?php 
-    session_start();
-    if(!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "guide"){
-    header("Location: ../index.html");
-    exit();
-    }
+require_once __DIR__ . "/../Models/Guide.php";
+require_once __DIR__ . "/../Middlewares/IsAuthed.php";
+require_once __DIR__ . "/../Middlewares/IsGuide.php";
+
+session_start();
+
+IsAuthed::handle();
+IsGuide::handle();
 ?>
 
 <!DOCTYPE html>

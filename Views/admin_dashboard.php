@@ -1,18 +1,22 @@
 <?php
-session_start();
-if (!isset($_SESSION["user_id"]) || $_SESSION["role"] !== "admin") {
-    header("Location: ../index.html");
-    exit();
-}
+
 require_once __DIR__ . "/../database/database.php";
-$stmt = $db->query("SELECT a.name AS animal_name, h.name AS habitat_name , a.diet_type , a.image, a.id FROM animals a INNER JOIN habitats h ON h.id = a.id_habitat", PDO::FETCH_ASSOC);
-$animals = $stmt->fetchAll();
+require_once __DIR__ . "/../Models/Animal.php";
+require_once __DIR__ . "/../Models/Habitat.php";
+require_once __DIR__ . "/../Models/Admin.php";
+require_once __DIR__ . "/../Models/User.php";
+require_once __DIR__ . "/../Middlewares/IsAuthed.php";
+require_once __DIR__ . "/../Middlewares/IsAdmin.php";
 
-$stmt = $db->query("SELECT * FROM habitats", PDO::FETCH_ASSOC);
-$habitats = $stmt->fetchAll();
+session_start();
 
-$stmt = $db->query("SELECT * FROM users WHERE id != 1", PDO::FETCH_ASSOC);
-$users = $stmt->fetchAll();
+IsAuthed::handle();
+IsAdmin::handle();
+
+$animals = Animal::getAll();
+$habitats = Habitat::getAll();
+$users = User::getAll();
+
 ?>
 
 
@@ -69,8 +73,8 @@ $users = $stmt->fetchAll();
         <div class="container-fluid p-4">
             <div class="container-fluid p-4">
 
-            <div class="text-end mb-3">
-                    <a href="../controllers/logout.php" class="btn btn-outline-danger btn-sm">
+                <div class="text-end mb-3">
+                    <a href="../Controllers/logout.php" class="btn btn-outline-danger btn-sm">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 </div>
@@ -124,10 +128,10 @@ $users = $stmt->fetchAll();
                                                     <td>{$animal['animal_name']}</td>
                                                     <td>{$animal['diet_type']}</td>
                                                     <td>{$animal['habitat_name']}</td>
-                                                    <td><img src='/../assets/{$animal['image']}' width='50'></td>
+                                                    <td><img src='/../assets/images/{$animal['image']}' width='50'></td>
                                                     <td class='d-flex gap-2'>
-                                                        <a href='/../controllers/edit_animal.php?id={$animal['id']}' class='btn btn-primary btn-sm'>Edit</a>
-                                                        <form action='/../controllers/delete_animal.php' method='post'>
+                                                        <a href='./edit_animal.php?id={$animal['id']}' class='btn btn-primary btn-sm'>Edit</a>
+                                                        <form action='/../Controllers/delete_animal.php' method='post'>
                                                             <input type='hidden' name='id' value='{$animal['id']}'/>
                                                             <button type='submit' class='btn btn-danger btn-sm'>Delete</button>
                                                         </form>
@@ -150,7 +154,7 @@ $users = $stmt->fetchAll();
                     <div class="card mb-4">
                         <div class="card-header"><i class="fas fa-plus me-1"></i> Add New Animal</div>
                         <div class="card-body">
-                            <form action="/../controllers/add_animal.php" enctype="multipart/form-data" method="post">
+                            <form action="/../Controllers/add_animal.php" enctype="multipart/form-data" method="post">
                                 <div class="mb-3">
                                     <label class="form-label">Animal Name</label>
                                     <input type="text" name="name" class="form-control" placeholder="e.g. Lion">
@@ -219,8 +223,8 @@ $users = $stmt->fetchAll();
                                                         <td>{$habitat['name']}</td>
                                                         <td>{$habitat['description']}</td>
                                                         <td class='d-flex gap-2'>
-                                                            <a href='/../controllers/edit_habitat.php?id={$habitat['id']}' class='btn btn-primary btn-sm'>Edit</a>
-                                                            <form method='post' action='/../controllers/delete_habitat.php'>
+                                                            <a href='./edit_habitat.php?id={$habitat['id']}' class='btn btn-primary btn-sm'>Edit</a>
+                                                            <form method='post' action='/../Controllers/delete_habitat.php'>
                                                                 <input type='hidden' name='id' value='{$habitat['id']}'>
                                                                 <button type='submit' class='btn btn-danger btn-sm'>Delete</button>
                                                             </form>
@@ -243,7 +247,7 @@ $users = $stmt->fetchAll();
                     <div class="card mb-4">
                         <div class="card-header"><i class="fas fa-plus me-1"></i> Add New Habitat</div>
                         <div class="card-body">
-                            <form method="post" action="/../controllers/add_habitat.php">
+                            <form method="post" action="/../Controllers/add_habitat.php">
                                 <div class="mb-3">
                                     <label class="form-label">Habita Name</label>
                                     <input type="text" class="form-control" name="name" placeholder="Jangle">
@@ -288,6 +292,7 @@ $users = $stmt->fetchAll();
                                         $sts;
                                         $active_button;
                                         $approved;
+
                                         if ($user["is_active"] === 0) {
                                             $sts = "desactive";
                                             $activate_button = "Activate";
@@ -296,7 +301,7 @@ $users = $stmt->fetchAll();
                                             $activate_button = "desactivate";
                                         }
 
-                                        if ($user["is_approved"] === 0) {
+                                        if ($user["is_approved"] === 0 && $user["role"] === "guide") {
                                             echo "    
                                                 <tr>
                                                     <td>{$user['name']}</td>
@@ -305,13 +310,27 @@ $users = $stmt->fetchAll();
                                                     <td>Wait Approving</td>
                                                     <td class='d-flex gap-2'>
 
-                                                        <form method='POST' action='/../controllers/user_approve.php'>
+                                                        <form method='POST' action='/../Controllers/user_approve.php'>
                                                             <input type='hidden' name='id' value='{$user['id']}'>
                                                             <button type='submit' class='btn btn-success btn-sm'>Approve</button>
                                                         </form>
                                                 </tr>                                   
                                             ";
-                                        } else {
+                                            continue;
+                                        }
+
+                                        if ($user["is_approved"] === 1 && $user["role"] === "guide") {
+                                            echo "    
+                                                <tr>
+                                                    <td>{$user['name']}</td>
+                                                    <td>{$user['email']}</td>
+                                                    <td>{$user['role']}</td>
+                                                    <td>Approved</td>
+                                                </tr>                                   
+                                            ";
+                                            continue;
+                                        } 
+                                        
                                             echo "    
                                             <tr>
                                                 <td>{$user['name']}</td>
@@ -319,7 +338,7 @@ $users = $stmt->fetchAll();
                                                 <td>{$user['role']}</td>
                                                 <td>$sts</td>
                                                 <td class='d-flex gap-2'>
-                                                    <form method='POST' action='/../controllers/user_activate.php'>
+                                                    <form method='POST' action='/../Controllers/user_activate.php'>
                                                         <input type='hidden' name='id' value='{$user['id']}'>
                                                         <input type='hidden' name='status' value='{$user['is_active']}'>
                                                          <button type='submit' class='btn btn-warning btn-sm'>$activate_button</button>
@@ -327,7 +346,7 @@ $users = $stmt->fetchAll();
                                                 </td>
                                             </tr>                                   
                                         ";
-                                        }
+                                    
                                     }
                                     ?>
 
